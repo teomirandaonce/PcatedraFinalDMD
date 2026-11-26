@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8"><title>Diagrama estrella DWH</title>
+<style>
+body{margin:0;background:#fff;font-family:-apple-system,Segoe UI,Helvetica,sans-serif}
+.wrap{position:relative;width:1200px;height:830px}
+.t{position:absolute;border:2px solid #1f3b63;border-radius:8px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12);font-size:13px;width:250px}
+.t h3{margin:0;padding:8px 10px;color:#fff;font-size:14px;border-radius:5px 5px 0 0}
+.dim h3{background:#2f6db3}.fact h3{background:#1f3b63}
+.fact{width:300px;border-color:#1f3b63}
+.t ul{list-style:none;margin:0;padding:6px 10px}
+.t li{padding:2px 0;display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted #e2e6ea}
+.t li span{color:#6b7785;font-size:11.5px}
+.pk{font-weight:700}.fk{color:#2f6db3}.gen{font-style:italic;color:#7a5a00}
+h1{position:absolute;left:0;right:0;top:14px;text-align:center;margin:0;font-size:20px;color:#1f3b63}
+.leg{position:absolute;left:20px;bottom:16px;font-size:12px;color:#444}
+svg{position:absolute;inset:0}
+</style>
+<div class="wrap">
+<h1>Esquema estrella — dwh (PostgreSQL 16) · Global Electronic Retail</h1>
+<svg width="1200" height="830"><g stroke="#1f3b63" stroke-width="2" fill="none">
+<line x1="290" y1="190" x2="450" y2="380"/><line x1="910" y1="190" x2="750" y2="380"/>
+<line x1="290" y1="640" x2="450" y2="530"/><line x1="910" y1="690" x2="750" y2="560"/>
+<line x1="290" y1="690" x2="450" y2="585" stroke-dasharray="6 4"/>
+</g><g font-size="12" fill="#1f3b63" font-weight="700" stroke="#fff" stroke-width="5" paint-order="stroke">
+<text x="385" y="265">N : 1</text><text x="770" y="265">N : 1</text>
+<text x="296" y="560">N : 1 pedido</text>
+<text x="300" y="735" font-weight="400" font-style="italic">N : 1 envío (ship_date_id)</text>
+<text x="805" y="640">N : 1</text></g></svg>
+
+<div class="t dim" style="left:40px;top:70px"><h3>dwh.dim_cliente</h3><ul>
+<li class="pk">customer_id <span>INT PK IDENTITY</span></li>
+<li>customer_code <span>VARCHAR(50) UK</span></li>
+<li>customer_name <span>VARCHAR(100)</span></li>
+<li>segment <span>VARCHAR(50)</span></li>
+<li>created_at <span>TIMESTAMPTZ</span></li></ul></div>
+
+<div class="t dim" style="left:910px;top:70px"><h3>dwh.dim_producto</h3><ul>
+<li class="pk">product_id <span>INT PK IDENTITY</span></li>
+<li>product_code <span>VARCHAR(50) UK</span></li>
+<li>product_name <span>VARCHAR(150)</span></li>
+<li>category <span>VARCHAR(50)</span></li>
+<li>sub_category <span>VARCHAR(50)</span></li>
+<li>created_at <span>TIMESTAMPTZ</span></li></ul></div>
+
+<div class="t dim" style="left:40px;top:560px"><h3>dwh.dim_tiempo</h3><ul>
+<li class="pk">date_id <span>INT PK (YYYYMMDD)</span></li>
+<li>fecha <span>DATE UK</span></li>
+<li>anio · trimestre · mes <span>SMALLINT</span></li>
+<li>nombre_mes <span>VARCHAR(15)</span></li>
+<li>dia · dia_semana <span>SMALLINT</span></li>
+<li>es_fin_semana <span>BOOLEAN</span></li></ul></div>
+
+<div class="t dim" style="left:910px;top:540px"><h3>dwh.dim_ubicacion</h3><ul>
+<li class="pk">location_id <span>INT PK IDENTITY</span></li>
+<li>city · state · country <span>UK compuesta</span></li>
+<li>region <span>VARCHAR(50)</span></li>
+<li>iso3 <span>VARCHAR(3)</span></li>
+<li>market <span>VARCHAR(50)</span></li>
+<li>latitud · longitud <span>NUMERIC(9,6)</span></li>
+<li>created_at <span>TIMESTAMPTZ</span></li></ul></div>
+
+<div class="t fact" style="left:450px;top:230px"><h3>dwh.fact_ventas_finanzas</h3><ul>
+<li class="pk">fact_id <span>BIGINT PK IDENTITY</span></li>
+<li>order_id · primary_id <span>UK (grano)</span></li>
+<li>ship_mode <span>degenerada</span></li>
+<li class="fk">customer_id <span>FK → dim_cliente</span></li>
+<li class="fk">product_id <span>FK → dim_producto</span></li>
+<li class="fk">location_id <span>FK → dim_ubicacion</span></li>
+<li class="fk">date_id <span>FK → dim_tiempo</span></li>
+<li class="fk">ship_date_id <span>FK → dim_tiempo</span></li>
+<li>quantity <span>INT ≥ 0</span></li>
+<li>discount <span>NUMERIC(4,2) [0,1]</span></li>
+<li>sales · profit <span>NUMERIC(12,2)</span></li>
+<li>shipping/storage/personnel <span>NUMERIC(10,2)</span></li>
+<li>selling/purchasing_costs <span>NUMERIC(10,2)</span></li>
+<li class="gen">total_costs <span>GENERATED STORED</span></li>
+<li class="gen">margen_neto <span>GENERATED STORED</span></li>
+<li>loaded_at <span>TIMESTAMPTZ</span></li></ul></div>
+
+<div class="leg"><b>Negrita</b>: clave primaria · <span style="color:#2f6db3">Azul</span>: clave foránea · <i style="color:#7a5a00">Cursiva</i>: columna calculada · línea punteada: rol "fecha de envío" de dim_tiempo
+<br>Filas cargadas: dim_cliente 1,541 · dim_producto 7,000 · dim_ubicacion 2,186 · dim_tiempo 730 · fact_ventas_finanzas 20,281</div>
+</div>

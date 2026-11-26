@@ -1,0 +1,21 @@
+# PostgreSQL 16 para el Datawarehouse de Global Electronic Retail
+# Uso: docker compose up -d
+services:
+  dwh:
+    image: postgres:16
+    container_name: dwh_global_retail
+    environment:
+      POSTGRES_DB: ${DWH_DB:-global_retail_dwh}
+      POSTGRES_USER: ${DWH_USER:-dwh_admin}
+      POSTGRES_PASSWORD: ${DWH_PASSWORD:-dwh_admin_2026}
+    ports:
+      - "${DWH_PORT:-5432}:5432"
+    volumes:
+      - dwh_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DWH_USER:-dwh_admin} -d ${DWH_DB:-global_retail_dwh}"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  dwh_data:
