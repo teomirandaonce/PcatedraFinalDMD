@@ -1,0 +1,14 @@
+{
+  "name": "Global Electronic Retail",
+  "dataColors": [
+    "#087F82",
+    "#12354C",
+    "#53A8C0",
+    "#E2A44E",
+    "#A65B62",
+    "#6B8E91"
+  ],
+  "background": "#F1F5F8",
+  "foreground": "#173246",
+  "tableAccent": "#087F82"
+}

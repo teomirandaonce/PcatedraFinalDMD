@@ -1,0 +1,35 @@
+COLUMNA CALCULADA EN dim_tiempo (crear primero):
+Periodo = FORMAT('dim_tiempo'[fecha], "yyyy-MM")
+
+MEDIDAS (crear una por una en fact_ventas_finanzas):
+
+Ventas totales =
+SUM('fact_ventas_finanzas'[sales])
+
+Ganancia total =
+SUM('fact_ventas_finanzas'[profit])
+
+Costos totales registrados =
+SUM('fact_ventas_finanzas'[total_costs])
+
+Margen de beneficio =
+DIVIDE([Ganancia total], [Ventas totales])
+
+Valor promedio por pedido =
+DIVIDE([Ventas totales], DISTINCTCOUNT('fact_ventas_finanzas'[order_id]))
+
+Crecimiento de ventas =
+VAR MesUnico = HASONEVALUE('dim_tiempo'[Periodo])
+VAR AnioUnico = HASONEVALUE('dim_tiempo'[anio])
+VAR FechaActual = MAX('dim_tiempo'[fecha])
+VAR AnioActual = SELECTEDVALUE('dim_tiempo'[anio])
+VAR MesAnterior = EDATE(DATE(YEAR(FechaActual), MONTH(FechaActual), 1), -1)
+VAR Actual = [Ventas totales]
+VAR Anterior = SWITCH(TRUE(),
+    MesUnico, CALCULATE([Ventas totales], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[fecha] >= MesAnterior && 'dim_tiempo'[fecha] < EDATE(MesAnterior, 1))),
+    AnioUnico && NOT ISFILTERED('dim_tiempo'[Periodo]), CALCULATE([Ventas totales], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[anio] = AnioActual - 1)),
+    BLANK())
+RETURN IF(NOT ISBLANK(Anterior) && NOT ISBLANK(Actual), DIVIDE(Actual - Anterior, Anterior))
+
+Formatos: Margen y Crecimiento = porcentaje, 2 decimales; resto = decimal, 2 decimales.
+Usar año y Periodo (mes completo) como segmentadores; no usar selección de días para la medida de crecimiento.
