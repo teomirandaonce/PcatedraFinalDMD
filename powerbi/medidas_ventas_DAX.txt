@@ -1,0 +1,59 @@
+MEDIDAS Y COLUMNAS CALCULADAS — PÁGINA VENTAS 
+
+PBIX: powerbi/GlobalElectronicRetail_Fase2.pbix
+Modelo: 5 tablas (dim_cliente, dim_producto, dim_ubicacion, dim_tiempo,
+fact_ventas_finanzas), 5 relaciones (4 activas y ship_date_id inactiva).
+
+COLUMNAS CALCULADAS
+
+En dim_tiempo:
+Periodo = FORMAT('dim_tiempo'[fecha], "yyyy-MM")
+
+En dim_cliente (evita mezclar clientes con el mismo nombre):
+Cliente = 'dim_cliente'[customer_name] & " (" & 'dim_cliente'[customer_code] & ")"
+
+MEDIDAS BASE (powerbi/medidas_DAX.txt)
+
+Ventas totales = SUM('fact_ventas_finanzas'[sales])
+
+Ganancia total = SUM('fact_ventas_finanzas'[profit])
+
+Costos totales registrados = SUM('fact_ventas_finanzas'[total_costs])
+
+Margen de beneficio = DIVIDE([Ganancia total], [Ventas totales])
+
+Valor promedio por pedido =
+DIVIDE([Ventas totales], DISTINCTCOUNT('fact_ventas_finanzas'[order_id]))
+
+Crecimiento de ventas =
+VAR MesUnico = HASONEVALUE('dim_tiempo'[Periodo])
+VAR AnioUnico = HASONEVALUE('dim_tiempo'[anio])
+VAR FechaActual = MAX('dim_tiempo'[fecha])
+VAR AnioActual = SELECTEDVALUE('dim_tiempo'[anio])
+VAR MesAnterior = EDATE(DATE(YEAR(FechaActual), MONTH(FechaActual), 1), -1)
+VAR Actual = [Ventas totales]
+VAR Anterior = SWITCH(TRUE(),
+MesUnico, CALCULATE([Ventas totales], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[fecha] >= MesAnterior && 'dim_tiempo'[fecha] < EDATE(MesAnterior, 1))),
+ AnioUnico && NOT ISFILTERED('dim_tiempo'[Periodo]), CALCULATE([Ventas totales], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[anio] = AnioActual - 1)),
+ BLANK())
+RETURN IF(NOT ISBLANK(Anterior) && NOT ISBLANK(Actual), DIVIDE(Actual - Anterior, Anterior))
+
+MEDIDAS AUXILIARES DE VENTAS
+
+Total pedidos = DISTINCTCOUNT('fact_ventas_finanzas'[order_id])
+
+Clientes activos = DISTINCTCOUNT('fact_ventas_finanzas'[customer_id])
+
+MEDIDAS DE VARIACIÓN (powerbi/variaciones_DAX.txt, que se usan como etiquetas en Finanzas)
+
+Variacion ganancia anual
+Variacion costos anual
+Variacion margen anual pp
+
+FORMATO
+
+- Ventas totales, Ganancia total, Costos totales registrados, Valor promedio
+  por pedido y Total pedidos: número decimal con 2 decimales.
+- Margen de beneficio y Crecimiento de ventas: porcentaje con 2 decimales.
+- Total pedidos y Clientes activos: entero.
+
