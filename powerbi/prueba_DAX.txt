@@ -1,0 +1,17 @@
+-- Ejecutar cada bloque por separado en la vista de consultas DAX.
+EVALUATE
+ROW("Ventas", [Ventas totales], "Ganancia", [Ganancia total], "Costos", [Costos totales registrados], "Margen %", [Margen de beneficio]*100, "Promedio", [Valor promedio por pedido], "Pedidos", DISTINCTCOUNT('fact_ventas_finanzas'[order_id]))
+
+EVALUATE
+SUMMARIZECOLUMNS('dim_tiempo'[anio], "Ventas", [Ventas totales], "Ganancia", [Ganancia total], "Costos", [Costos totales registrados], "Margen %", [Margen de beneficio]*100, "Promedio", [Valor promedio por pedido], "Crecimiento %", [Crecimiento de ventas]*100)
+ORDER BY 'dim_tiempo'[anio]
+
+EVALUATE
+SUMMARIZECOLUMNS('dim_tiempo'[Periodo], "Ventas", [Ventas totales], "Ganancia", [Ganancia total], "Costos", [Costos totales registrados], "Margen %", [Margen de beneficio]*100, "Crecimiento %", [Crecimiento de ventas]*100)
+ORDER BY 'dim_tiempo'[Periodo]
+
+EVALUATE
+SUMMARIZECOLUMNS('dim_producto'[category], "Ventas", [Ventas totales], "Ganancia", [Ganancia total], "Margen %", [Margen de beneficio]*100)
+
+EVALUATE
+SUMMARIZECOLUMNS('dim_ubicacion'[region], "Ventas", [Ventas totales], "Costos", [Costos totales registrados], "Ganancia", [Ganancia total], "Margen %", [Margen de beneficio]*100)

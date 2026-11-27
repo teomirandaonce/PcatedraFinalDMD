@@ -1,0 +1,15 @@
+-- Opcionales: variación contra año anterior; usar con año único y sin filtro mensual.
+Variacion ganancia anual =
+VAR A = SELECTEDVALUE('dim_tiempo'[anio])
+VAR P = CALCULATE([Ganancia total], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[anio] = A - 1))
+RETURN IF(NOT ISBLANK(A) && NOT ISFILTERED('dim_tiempo'[Periodo]) && NOT ISBLANK(P), DIVIDE([Ganancia total]-P, P))
+
+Variacion costos anual =
+VAR A = SELECTEDVALUE('dim_tiempo'[anio])
+VAR P = CALCULATE([Costos totales registrados], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[anio] = A - 1))
+RETURN IF(NOT ISBLANK(A) && NOT ISFILTERED('dim_tiempo'[Periodo]) && NOT ISBLANK(P), DIVIDE([Costos totales registrados]-P, P))
+
+Variacion margen anual pp =
+VAR A = SELECTEDVALUE('dim_tiempo'[anio])
+VAR P = CALCULATE([Margen de beneficio], FILTER(ALL('dim_tiempo'), 'dim_tiempo'[anio] = A - 1))
+RETURN IF(NOT ISBLANK(A) && NOT ISFILTERED('dim_tiempo'[Periodo]) && NOT ISBLANK(P), 100*([Margen de beneficio]-P))
